@@ -1,7 +1,7 @@
 services:
   api:
     build: .
-    container_name: nest-encontro-06
+    container_name: api-aula
     ports:
       - "3000:3000"
     volumes:
