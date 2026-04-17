@@ -26,4 +26,22 @@ export class ProdutosService {
     listarPorCategoria(categoria: string){
         return this.produtos.filter((p) => p.categoria === categoria);
     }
+
+    buscarPorId(id: number){
+        const produto  = this.produtos.find((p) => p.id === id);
+
+        return produto;
+    }
+
+    criar(dados: Omit<Produto, 'id'>) {
+        const novoId = 
+            this.produtos.length > 0 
+                ? Math.max(...this.produtos.map((p) => p.id)) + 1
+                : 1;
+
+        const novoProduto : Produto = {id: novoId, ...dados};   
+        this.produtos.push(novoProduto);
+        
+        return novoProduto;
+    }
 }
