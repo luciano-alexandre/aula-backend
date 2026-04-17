@@ -44,4 +44,30 @@ export class ProdutosService {
         
         return novoProduto;
     }
+
+    atualizarCompleto(id: number, dados: Omit<Produto, 'id'>) {
+        const indice = this.produtos.findIndex((p) => p.id === id);
+
+        if(indice === -1){
+            throw new Error('Produto não encontrado');
+        }
+
+        const atualizado : Produto = {id, ...dados};
+        this.produtos[indice] = atualizado;
+
+        return atualizado;
+    }
+
+    atualizarParcial(id: number, dados: Partial<Omit<Produto, 'id'>>) {
+        const produto = this.buscarPorId(id);
+        
+        if(!produto){
+            throw new Error('Produto não encontrado');
+        }
+
+        const atualizado : Produto = {...produto, ...dados};
+        this.produtos = this.produtos.map((p) => p.id === id ? atualizado : p);
+
+        return atualizado;
+    }
 }
