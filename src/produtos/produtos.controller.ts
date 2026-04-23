@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Get, Param, Query, Post, Body, Put } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Param, Query, Post, Body, Put, Patch } from '@nestjs/common';
 import { ProdutosService } from './produtos.service';
 
 @Controller('produtos')
@@ -62,5 +62,25 @@ export class ProdutosController {
         }
 
         return this.produtosService.atualizarCompleto(idNumero, body);
+    }
+
+    @Patch(':id')
+    atualizarParcial(
+        @Param('id') id: string,
+        @Body()
+        body: {
+            nome?: string;
+            categoria?: string;
+            preco?: number;
+            ativo?: boolean;  
+        }
+    ){
+        const idNumero = Number(id);
+
+        if (Number.isNaN(idNumero)) {
+            throw new BadRequestException('O ID deve ser um número');
+        }
+
+        return this.produtosService.atualizarParcial(idNumero, body);
     }
 }
