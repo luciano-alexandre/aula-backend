@@ -1,4 +1,6 @@
-import { BadRequestException, Controller, Get, Param, Query, Post, Body, Put, Patch } from '@nestjs/common';
+import { BadRequestException, DefaultValuePipe, Controller, Get, Param, Query, Post, Body, Put, Patch, Delete, ParseIntPipe } from '@nestjs/common';
+import { CreateProdutoDto } from './dto/create-produto.dto';
+import { UpdateProdutoDto } from './dto/update-produto.dto';
 import { ProdutosService } from './produtos.service';
 
 @Controller('produtos')
@@ -6,7 +8,9 @@ export class ProdutosController {
     constructor(private readonly produtosService: ProdutosService) { }
 
     @Get()
-    listar(@Query('categoria') categoria?: string) {
+    listar(@Query('categoria') categoria?: string,
+            @Query('limite', new DefaultValuePipe(10), ParseIntPipe) limite?: number) {
+
         if (!categoria) {
             return this.produtosService.listarTodos();
         }
@@ -16,6 +20,7 @@ export class ProdutosController {
 
     @Get(':id')
     buscarPorId(@Param('id') id: string) {
+        
         const idNumero = Number(id);
 
         if (Number.isNaN(idNumero)) {
@@ -82,5 +87,16 @@ export class ProdutosController {
         }
 
         return this.produtosService.atualizarParcial(idNumero, body);
+    }
+
+    @Delete(':id')
+    remover(@Param('id') id: string){
+        const idNumero = Number(id);
+
+        if (Number.isNaN(idNumero)) {
+            throw new BadRequestException('O ID deve ser um número');
+        }
+
+        return this.produtosService.remover(idNumero);        
     }
 }

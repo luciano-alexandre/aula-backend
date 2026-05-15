@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 type Produto = {
     id: number;
@@ -69,5 +69,16 @@ export class ProdutosService {
         this.produtos = this.produtos.map((p) => p.id === id ? atualizado : p);
 
         return atualizado;
+    }
+
+    remover(id: number){
+        const existe = this.produtos.some((p) => p.id === id);
+
+        if(!existe){
+            throw new NotFoundException('Produto não encontrado');
+        }
+
+        this.produtos = this.produtos.filter((p) => p.id !== id);        
+        return {mensagem: `Produto com Id ${id} removido com sucesso`};
     }
 }
