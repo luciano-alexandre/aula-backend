@@ -27,6 +27,34 @@
 
 ## Project setup
 
+### Desenvolvimento com Docker
+
+```bash
+docker compose up -d --build
+```
+
+A API executa `npm ci` antes de iniciar, sincronizando o volume
+`node_modules` com o `package-lock.json`. Isso também acontece quando o
+contêiner é reiniciado. A inicialização requer acesso ao registro npm para
+pacotes que não estejam em cache.
+
+Para adicionar dependências, pare a API antes de modificar o volume compartilhado
+e inicie novamente após a instalação:
+
+```bash
+docker compose stop api
+docker compose run --rm --no-deps api npm install @nestjs/typeorm typeorm pg @nestjs/config
+docker compose up -d api
+```
+
+O comando explícito `npm install` substitui o comando de inicialização do serviço
+no contêiner temporário. O `--rm` remove apenas esse contêiner, preservando o volume
+nomeado de dependências. Reiniciar a API após a instalação também reinicia o
+compilador em modo watch, para que ele reconheça as novas dependências.
+
+Não use `docker compose down -v` para atualizar dependências: esse comando também
+remove o volume do PostgreSQL e seus dados.
+
 ```bash
 $ npm install
 ```
