@@ -1,3 +1,4 @@
+import { CentrosCustoModule } from './centros-custo/centros-custo.module';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -19,7 +20,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         database: config.getOrThrow<string>('DB_NAME'),
         username: config.getOrThrow<string>('DB_USER'),
         password: config.getOrThrow<string>('DB_PASSWORD'),
-        autoLoadEntities: false,
+        autoLoadEntities: true,
         synchronize: false,
         migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
         migrationsRun: true,
@@ -27,9 +28,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     }),
     AuthModule,
     EstadoModule,
-    SolicitacoesModule
+    CentrosCustoModule,
+    SolicitacoesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

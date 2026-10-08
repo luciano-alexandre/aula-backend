@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { DataSource } from 'typeorm';
 import { Solicitacao } from '../solicitacoes/solicitacao.entity';
 import { Auditoria } from '../auditoria/auditoria.entity';
+import { CentroCusto } from '../centros-custo/centro-custo.entity';
 
 export default new DataSource({
   type: 'postgres',
@@ -10,7 +11,7 @@ export default new DataSource({
   database: process.env.DB_NAME,
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  entities: [Solicitacao, Auditoria],
+  entities: [Solicitacao, Auditoria, CentroCusto],
   migrations: ['src/database/migrations/*{.ts,.js}'],
   synchronize: false,
 });

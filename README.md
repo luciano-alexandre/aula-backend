@@ -59,6 +59,101 @@ remove o volume do PostgreSQL e seus dados.
 $ npm install
 ```
 
+## Gerar migrations
+
+Na rede do Docker, o banco atende em `db:5432`. O mapeamento `127.0.0.1:5437:5432`
+permite acesso pela máquina local em `localhost:5437`. A porta externa pode ser
+alterada com `DB_EXTERNAL_PORT` no `.env`; dentro do Docker, mantenha `DB_PORT=5432`.
+
+Com o banco em execução, gere uma migration em um contêiner temporário:
+
+```bash
+docker compose up -d db
+docker compose run --rm --no-deps api npm run migration:generate -- src/database/migrations/NomeDaMigration
+```
+
+Se executar o comando diretamente na máquina, com as dependências instaladas:
+
+```bash
+DB_HOST=localhost DB_PORT=5437 npm run migration:generate -- src/database/migrations/NomeDaMigration
+```
+
+Após alterar variáveis do Compose, recrie a API com `docker compose up -d api`
+para aplicar a configuração; apenas reiniciar o contêiner não atualiza as variáveis.
+
+## Encontro 13: aprovação com reserva de orçamento
+
+Implementação da [correção da Prática 2](https://github.com/luciano-alexandre/sistemas-corporativos/blob/main/docs/encontros/encontro-13.md).
+
+Com o PostgreSQL disponível:
+
+```bash
+docker compose run --rm --no-deps api npm run migration:run
+docker compose run --rm --no-deps api npm run seed
+docker compose up -d api
+```
+
+O seed cria `CC-1234` com saldo inicial de `500000` centavos e duas solicitações:
+monitor (`120000`) e servidor (`600000`). Para usar os quatro últimos dígitos da
+matrícula, execute o seed com `-e SEED_CENTRO_CUSTO=CC-5678` antes de `api` no
+comando Docker. Execuções repetidas não duplicam os registros nem restauram saldo,
+status ou versões.
+
+Consulte `GET /centros-custo/CC-1234` e `GET /solicitacoes` com JWT para obter as
+versões atuais. Apenas um gestor pode aprovar:
+
+```http
+PATCH /solicitacoes/1/aprovar
+Authorization: Bearer <token-do-gestor>
+Content-Type: application/json
+
+{
+  "versaoSolicitacao": 1,
+  "versaoCentroCusto": 1
+}
+```
+
+A aprovação do monitor retorna 200, reserva `120000` centavos, deixa o saldo em
+`380000` e incrementa as duas versões. A auditoria registra ator do JWT, centro,
+valor, saldo anterior, saldo resultante e versões utilizadas. As três gravações
+usam a mesma transação; uma falha desfaz todas. Saldo insuficiente, versão antiga
+ou solicitação já decidida retornam 409. Acesso sem JWT retorna 401; usuário sem
+papel gestor recebe 403. Campos extras enviados no corpo são recusados com 400.
+
+A criação de solicitações recebe `titulo`, `centroCusto`, `valorEstimadoCentavos`
+e, opcionalmente, `prioridade` (padrão `normal`). O valor é inteiro e não negativo.
+O centro deve existir. O campo `status` é definido pela aplicação.
+
+A migration inicial existente já cria as três tabelas e o valor estimado. A
+migration `GarantirIntegridadeOrcamento1790630000000` acrescenta prioridade,
+valores padrão, restrições contra saldo/valor negativos e a chave estrangeira.
+Antes de criar a chave, ela cadastra com saldo zero os centros referenciados por
+solicitações antigas. O rollback dessa evolução preserva os registros e remove
+as restrições, padrões e a coluna de prioridade adicionados. A configuração
+continua com `synchronize: false`.
+
+### Regressão da rejeição
+
+A rejeição continua disponível para gestores em `PATCH /solicitacoes/:id/rejeitar`,
+com `versaoSolicitacao`, `versaoCentroCusto` e `justificativa` de 10 a 200 caracteres.
+O DTO existente exige ambas as versões; a rejeição verifica a versão da
+solicitação e não altera o orçamento. A auditoria registra a justificativa.
+
+### Validação automatizada
+
+```bash
+docker compose run --rm --no-deps api npm run build
+docker compose run --rm --no-deps api npm run test:atividade13
+```
+
+A suíte cria e remove um banco temporário; o usuário PostgreSQL precisa ter
+permissão de criar bancos. `test:atividade11` executa a mesma suíte, incluindo a
+regressão de rejeição. São verificados os fluxos HTTP, autorização, versões,
+saldo insuficiente, duas aprovações concorrentes, concorrência entre solicitações
+do mesmo centro, falha real na gravação da auditoria, seed repetido, restrições
+SQL, evolução de dados antigos e reversão/recriação completa das migrations.
+A recriação ocorre somente no banco temporário, sem remover volumes do projeto.
+
 ## Compile and run the project
 
 ```bash

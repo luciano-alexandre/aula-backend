@@ -21,7 +21,10 @@
     "typeorm": "typeorm-ts-node-commonjs -d src/database/data-source.ts",
     "migration:generate": "npm run typeorm -- migration:generate",
     "migration:run": "npm run typeorm -- migration:run",
-    "migration:revert": "npm run typeorm -- migration:revert"
+    "migration:revert": "npm run typeorm -- migration:revert",
+    "seed": "ts-node src/database/seeds/solicitacoes.seed.ts",
+    "test:atividade11": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config ./test/jest-atividade11.json --runInBand",
+    "test:atividade13": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config ./test/jest-atividade11.json --runInBand"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
